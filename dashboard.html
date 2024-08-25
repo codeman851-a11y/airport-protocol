@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passenger Form</title>
+    <link rel="stylesheet" href="styles2.css"> <!-- Link to the CSS file -->
+</head>
+<body>
+    <form id="passenger-form">
+        <label for="serial">Serial:</label>
+        <input type="text" id="serial" required>
+        <label for="name">Name:</label>
+        <input type="text" id="name" required>
+        <label for="flight-number">Flight Number:</label>
+        <input type="text" id="flight-number" required>
+        <label for="date-time">Date & Time:</label>
+        <input type="datetime-local" id="date-time" required>
+        <label for="bida-letter">Bida Letter:</label>
+        <input type="text" id="bida-letter" required>
+        <label for="journey-type">Journey Type:</label>
+        <select id="journey-type" required>
+            <option value="arrival">Arrival</option>
+            <option value="departure">Departure</option>
+        </select>
+
+        <button type="submit">Add Passenger</button>
+        <button type="button" id="generate-pdf">Generate PDF</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Serial</th>
+                <th>Name</th>
+                <th>Flight Number</th>
+                <th>Date & Time</th>
+                <th>Bida Letter</th>
+                <th>Journey Type</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="passenger-list">
+            <!-- Rows will be added here -->
+        </tbody>
+    </table>
+
+    <!-- Include jsPDF library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.22/jspdf.plugin.autotable.min.js"></script>
+    <!--<script src="script1.js"></script>-->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('passenger-form');
+            const passengerList = document.getElementById('passenger-list');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Get form values
+                const serial = document.getElementById('serial').value;
+                const name = document.getElementById('name').value;
+                const flightNumber = document.getElementById('flight-number').value;
+                const dateTime = document.getElementById('date-time').value;
+                const bidaLetter = document.getElementById('bida-letter').value;
+                const journeyType = document.getElementById('journey-type').value;
+
+                // Validate form values
+                if (!serial || !name || !flightNumber || !dateTime || !bidaLetter || !journeyType) {
+                    alert('Please fill in all fields.');
+                    return;
+                }
+
+                // Create a new row
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${serial}</td>
+                    <td>${name}</td>
+                    <td>${flightNumber}</td>
+                    <td>${dateTime}</td>
+                    <td>${bidaLetter}</td>
+                    <td>${journeyType}</td>
+                    <td class="actions">
+                        <button type="button" onclick="deleteRow(this)">Delete</button>
+                    </td>
+                `;
+
+                // Append the new row to the table body
+                passengerList.appendChild(row);
+
+                // Clear form fields
+                form.reset();
+            });
+
+            window.deleteRow = function(button) {
+                // Remove the row from the table
+                button.closest('tr').remove();
+            };
+
+            // Function to generate PDF from table data
+            document.getElementById('generate-pdf').addEventListener('click', function() {
+                const { jsPDF } = window.jspdf;
+
+                // Create a new PDF document
+                const doc = new jsPDF();
+
+                // Add a title to the PDF
+                doc.text('Passenger List', 10, 10);
+
+                // Prepare the table data
+                const headers = ['Serial', 'Name', 'Flight Number', 'Date & Time', 'Bida Letter', 'Journey Type'];
+                const tableData = [];
+
+                // Get the table rows from the DOM
+                const rows = document.querySelectorAll('#passenger-list tr');
+                rows.forEach(row => {
+                    const rowData = [];
+                    row.querySelectorAll('td:not(.actions)').forEach(cell => {
+                        rowData.push(cell.textContent);
+                    });
+                    tableData.push(rowData);
+                });
+
+                // Add the table to the PDF
+                doc.autoTable({
+                    head: [headers],
+                    body: tableData,
+                    startY: 20
+                });
+
+                // Save the PDF
+                doc.save('passenger_list.pdf');
+            });
+        });
+    </script>
+</body>
+</html>
